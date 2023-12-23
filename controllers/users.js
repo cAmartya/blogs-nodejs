@@ -9,7 +9,7 @@ const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || "AMAZING PROJECT";
 export const signup = async (req, res) => {
     let success = false;
 
-    const { userName, email, password} = req.body;
+    const { userName, email, password, isAdmin} = req.body;
     console.log("signup users", userName, email, password)
 
     try {
@@ -25,7 +25,7 @@ export const signup = async (req, res) => {
 
         const salt = await bcrypt.genSaltSync(10);    
         const secPass = await bcrypt.hash(password, salt);
-        const user = await User.create({userName, email, password: secPass});
+        const user = await User.create({userName, email, password: secPass, isAdmin});
         
         // const user = new User(userName, email, password: secPass);
         // await user.save();        

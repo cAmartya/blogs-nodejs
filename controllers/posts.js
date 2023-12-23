@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import Posts from '../models/posts.js';
+import Users from '../models/users.js';
 
 const router = express.Router();
 
@@ -17,6 +18,19 @@ export const getPosts = async (req, res) => {
       const posts = await Posts.find().sort({_id: -1}).limit(LIMIT).skip(startIdx);
       
       res.status(200).json({data: posts, currentPage: Number(page), numberOfPages: Math.ceil(total / LIMIT)});
+  } catch (error) {
+      res.status(404).json({ message: error.message });
+  }
+}
+
+export const getPost = async (req, res) => {
+  const { id } = req.params;
+
+  try {  
+    if (!mongoose.Types.ObjectId.isValid(id)) return res.status(404).send(`No post with id: ${id}`);
+    const post = await Posts.findById(id)
+    
+    res.status(200).json(post);
   } catch (error) {
       res.status(404).json({ message: error.message });
   }
@@ -95,5 +109,21 @@ export const commentPost = async (req, res) => {
   res.json(updatedPost);
 }
 
+// ADMIN function for removing all posts
+export const deleteAllPost = async (req, res) => {
+
+  try {
+    const user = await Users.findById(req.userId)
+    if(!user) return res.status(404).send(`User doesn't exist`);
+    if(!user.isAdmin) return res.status(403).send(`User doesn't have permissions`);
+    
+    await Posts.deleteMany({});
+    res.json({ message: "All Posts deleted successfully." });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(`Internal Server Error`);
+  }   
+}
 
 export default router;
