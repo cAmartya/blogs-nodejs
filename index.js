@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 dotenv.config();
 
 import postRoutes from './routes/posts.js';
-// import userRoutes from './routes/user.js';
+import userRoutes from './routes/users.js';
 
 import connectToMongo from './db.js';
 connectToMongo();
@@ -24,7 +24,7 @@ app.get("/", (req, res) => {
 });
 
 app.use('/posts', postRoutes);
-// app.use('/user', userRoutes);
+app.use('/users', userRoutes);
 
 
 app.listen(port, () => {
