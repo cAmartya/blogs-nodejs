@@ -1,5 +1,5 @@
 import express from 'express';
-
+import mongoose from 'mongoose';
 import Posts from '../models/posts.js';
 
 const router = express.Router();
@@ -34,6 +34,65 @@ export const createPost = async (req, res) => {
   } catch (error) {
       res.status(409).json({ message: error.message });
   }
+}
+
+export const updatePost = async (req, res) => {
+  const { id } = req.params;
+  const { title, message, tags } = req.body;
+  
+  if (!mongoose.Types.ObjectId.isValid(id)) return res.status(404).send(`No post with id: ${id}`);
+
+  const updatedPost = { title, message, tags, _id: id };
+
+  await Posts.findByIdAndUpdate(id, updatedPost, { new: true });
+
+  res.json(updatedPost);
+}
+
+export const deletePost = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) return res.status(404).send(`No post with id: ${id}`);
+
+  await Posts.findByIdAndDelete(id);
+
+  res.json({ message: "Post deleted successfully." });
+}
+
+export const likePost = async (req, res) => {
+  const { id } = req.params;    
+  
+  if(!req.userId) return res.status(404).json({ message: 'Unauthenticated'})
+
+  if (!mongoose.Types.ObjectId.isValid(id)) return res.status(404).send(`No post with id: ${id}`);
+      
+  const post = await Posts.findById(id);
+  
+  const index = post.likes.findIndex((id) => id === String(req.userId));
+  if(index === -1)    {
+      post.likes.push(req.userId);
+  }else   {
+      post.likes = post.likes.filter((id) => id !== String(req.userId));
+  }
+  const updatedPost = await Posts.findByIdAndUpdate(id, post, { new: true });
+  
+  res.json(updatedPost);
+}
+
+export const commentPost = async (req, res) => {
+  const { id } = req.params;    
+  const { value } = req.body;
+  if(!req.userId) return res.status(404).json({ message: 'Unauthenticated'})
+
+  if (!mongoose.Types.ObjectId.isValid(id)) return res.status(404).send(`No post with id: ${id}`);
+      
+  const post = await Posts.findById(id);
+  
+  post.comments.push(value);
+
+  const updatedPost = await Posts.findByIdAndUpdate(id, post, { new: true });
+  
+  res.json(updatedPost);
 }
 
 
